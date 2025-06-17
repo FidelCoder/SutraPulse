@@ -113,8 +113,17 @@ contract EntryPoint is ReentrancyGuard {
         uint256 maxGasCost = userOp.callGasLimit + userOp.verificationGasLimit + userOp.preVerificationGas;
         prefund = maxGasCost * maxGasPrice;
 
-        // Verify sufficient balance
-        require(deposits[userOp.sender] >= prefund, "Insufficient balance for gas");
+        // Check if using paymaster
+        if (userOp.paymasterAndData.length >= 20) {
+            address paymaster = address(bytes20(userOp.paymasterAndData[0:20]));
+            require(paymaster.code.length > 0, "Invalid paymaster");
+            outOpInfo.paymaster = true;
+            // Verify paymaster has enough deposit
+            require(deposits[paymaster] >= prefund, "Insufficient paymaster deposit");
+        } else {
+            // Verify sender has enough deposit
+            require(deposits[userOp.sender] >= prefund, "Insufficient balance for gas");
+        }
         
         return (userOpHash, prefund);
     }
@@ -135,9 +144,10 @@ contract EntryPoint is ReentrancyGuard {
             uint256 actualGas = preGas - gasleft() + opInfo.preOpGas;
             actualGasCost = actualGas * gasPrice;
             
-            // Handle gas refund
+            // Handle gas payment
             if (opInfo.paymaster) {
-                deposits[address(bytes20(op.paymasterAndData[0:20]))] -= actualGasCost;
+                address paymaster = address(bytes20(op.paymasterAndData[0:20]));
+                deposits[paymaster] -= actualGasCost;
             } else {
                 deposits[op.sender] -= actualGasCost;
             }
@@ -154,6 +164,15 @@ contract EntryPoint is ReentrancyGuard {
         } catch {
             uint256 actualGas = preGas - gasleft() + opInfo.preOpGas;
             actualGasCost = actualGas * gasPrice;
+            
+            // Handle gas payment for failed transaction
+            if (opInfo.paymaster) {
+                address paymaster = address(bytes20(op.paymasterAndData[0:20]));
+                deposits[paymaster] -= actualGasCost;
+            } else {
+                deposits[op.sender] -= actualGasCost;
+            }
+
             emit UserOperationEvent(
                 getUserOpHash(op),
                 op.sender,

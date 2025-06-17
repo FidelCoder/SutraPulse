@@ -57,12 +57,19 @@ contract SmartWallet is Initializable, ReentrancyGuard {
     ) external onlyEntryPointOrOwner nonReentrant returns (bool success) {
         require(target != address(0), "Invalid target");
         
-        if (data.length > 0) {
-            bytes4 selector;
+        // Check function whitelisting for this function's selector
+        bytes4 executeSelector = this.execute.selector;
+        require(whitelistedFunctions[executeSelector], "Function not whitelisted");
+
+        // Check function whitelisting for the target call
+        if (data.length >= 4) {
+            bytes4 targetSelector;
             assembly {
-                selector := calldataload(data.offset)
+                let ptr := add(data.offset, 0)
+                targetSelector := and(mload(ptr), 0xffffffff00000000000000000000000000000000000000000000000000000000)
+                targetSelector := shr(224, targetSelector)
             }
-            require(whitelistedFunctions[selector], "Function not whitelisted");
+            require(whitelistedFunctions[targetSelector], "Target function not whitelisted");
         }
 
         nonce++;
@@ -151,22 +158,29 @@ contract SmartWallet is Initializable, ReentrancyGuard {
     ) external onlyEntryPointOrOwner nonReentrant returns (bool[] memory successes) {
         require(targets.length == values.length && values.length == datas.length, "Array lengths mismatch");
         
+        // Check function whitelisting for this function's selector
+        bytes4 executeBatchSelector = this.executeBatch.selector;
+        require(whitelistedFunctions[executeBatchSelector], "Function not whitelisted");
+
         successes = new bool[](targets.length);
         for (uint256 i = 0; i < targets.length; i++) {
             require(targets[i] != address(0), "Invalid target");
             
-            if (datas[i].length > 0) {
-                bytes4 selector;
+            // Check function whitelisting for each target call
+            if (datas[i].length >= 4) {
+                bytes4 targetSelector;
                 assembly {
                     let data := calldataload(add(datas.offset, mul(i, 0x20)))
-                    let ptr := add(data, 32)
-                    selector := calldataload(ptr)
+                    let ptr := add(data, 0)
+                    targetSelector := and(mload(ptr), 0xffffffff00000000000000000000000000000000000000000000000000000000)
+                    targetSelector := shr(224, targetSelector)
                 }
-                require(whitelistedFunctions[selector], "Function not whitelisted");
+                require(whitelistedFunctions[targetSelector], "Target function not whitelisted");
             }
 
             nonce++;
             (successes[i],) = targets[i].call{value: values[i]}(datas[i]);
+            require(successes[i], "Transaction failed");
             emit TransactionExecuted(targets[i], values[i], datas[i]);
         }
     }
