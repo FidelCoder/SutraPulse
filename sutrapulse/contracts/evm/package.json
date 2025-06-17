@@ -1,0 +1,44 @@
+{
+  "name": "sutrapulse-contracts",
+  "version": "1.0.0",
+  "description": "SutraPulse Account Abstraction Smart Contracts",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "deploy": "hardhat deploy",
+    "coverage": "hardhat coverage"
+  },
+  "keywords": [
+    "ethereum",
+    "smart-contracts",
+    "hardhat",
+    "account-abstraction"
+  ],
+  "author": "SutraPulse Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.9",
+    "@nomicfoundation/hardhat-ethers": "^3.0.9",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.12",
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@nomicfoundation/hardhat-verify": "^1.1.1",
+    "@openzeppelin/contracts": "^4.9.3",
+    "@openzeppelin/hardhat-upgrades": "^2.0.0",
+    "@typechain/ethers-v6": "^0.4.3",
+    "@typechain/hardhat": "^8.0.3",
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^20.4.2",
+    "chai": "^4.3.7",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.7.0",
+    "hardhat": "^2.17.0",
+    "hardhat-deploy": "^1.0.3",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-coverage": "^0.8.4",
+    "ts-node": "^10.9.1",
+    "typechain": "^8.3.2",
+    "typescript": "^5.1.6"
+  }
+}
