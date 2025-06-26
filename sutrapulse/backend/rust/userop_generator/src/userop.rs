@@ -3,6 +3,7 @@ use ethers::abi::Token;
 use serde::{Deserialize, Serialize};
 use crate::error::{Result, UserOpError};
 use crate::gas::GasEstimator;
+use crate::contracts::{UserOperationCall, IEntryPointCalls};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserOperation {
@@ -17,6 +18,24 @@ pub struct UserOperation {
     pub max_priority_fee_per_gas: U256,
     pub paymaster_and_data: Bytes,
     pub signature: Bytes,
+}
+
+impl From<UserOperation> for UserOperationCall {
+    fn from(op: UserOperation) -> Self {
+        UserOperationCall {
+            sender: op.sender,
+            nonce: op.nonce,
+            init_code: op.init_code,
+            call_data: op.call_data,
+            call_gas_limit: op.call_gas_limit,
+            verification_gas_limit: op.verification_gas_limit,
+            pre_verification_gas: op.pre_verification_gas,
+            max_fee_per_gas: op.max_fee_per_gas,
+            max_priority_fee_per_gas: op.max_priority_fee_per_gas,
+            paymaster_and_data: op.paymaster_and_data,
+            signature: op.signature,
+        }
+    }
 }
 
 impl UserOperation {
